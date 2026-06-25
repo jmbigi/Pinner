@@ -35,9 +35,11 @@ La máquina se adapta a vos, no vos a la máquina.
 - pinner-studio.exe generado con pinmaker (autorreferencial)
 - Usuario abre y tiene la GUI
 
-### Fase 6 — Generación por lote
+### Fase 6 — Generación por lote ✅
 - JSON multi-launcher → pinmaker genera todos de una
 - Ideal para setup de máquina nueva
+- `pinmaker --batch launchers.json`
+- Soporta: name, script, program, args, workdir, icon, output, preset, admin, console
 
 ---
 

@@ -123,6 +123,7 @@ cd C:\Desa\Pinner\exes
 | `--admin` | Ejecutar como administrador |
 | `--console` | Mostrar ventana de consola |
 | `--output`, `-o` | Carpeta de salida (default: `.\exes\`) |
+| `--batch` | Archivo JSON con múltiples launchers para generar en lote |
 | `--help`, `-h` | Muestra ayuda |
 
 ---
@@ -186,6 +187,40 @@ pinmaker -n "Portal" -p "cmd.exe" -a "/c start https://portal.cia"
 ```cmd
 pinmaker -n "Backup" -s "C:\scripts\backup.ps1" --admin --console
 ```
+
+### Batch desde JSON (múltiples launchers de una sola vez)
+
+```cmd
+pinmaker --batch launchers.json
+```
+
+Ejemplo de `launchers.json`:
+```json
+[
+  {
+    "name": "Chrome Privado",
+    "program": "chrome.exe",
+    "args": "-incognito",
+    "icon": "icons/ico/chrome.ico"
+  },
+  {
+    "name": "Terminal Admin",
+    "program": "powershell.exe",
+    "args": "-NoExit",
+    "admin": true,
+    "console": true,
+    "icon": "icons/ico/powershell.ico"
+  },
+  {
+    "name": "Backup Diario",
+    "script": "C:\\scripts\\backup.ps1",
+    "admin": true,
+    "console": true
+  }
+]
+```
+
+Soporta por cada item: `name`, `program`, `script`, `args`, `workdir`, `icon`, `preset`, `admin`, `console`, `output`.
 
 ---
 
