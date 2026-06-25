@@ -7,6 +7,7 @@ pinmaker.exe
 *.obj
 *.o
 *.user
+*.log
 output/
 
 # OS
