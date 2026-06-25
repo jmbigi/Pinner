@@ -252,7 +252,8 @@ int build_launcher(Config *cfg)
     }
 
     if (hasProgram && !cfg->console && is_console_app(cfg->program)) {
-        wprintf(L"WARN: %ls parece un programa de consola. Sin --console se ejecutara oculto.\n", cfg->program);
+        cfg->console = 1;
+        wprintf(L"NOTA: %ls es un programa de consola. Se activo --console automaticamente.\n", cfg->program);
     }
 
     GetTempPathW(MAX_PATH, tempDir);

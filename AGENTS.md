@@ -77,12 +77,43 @@
 Siempre intentar primero estas herramientas antes de preguntar al usuario.
 Si alguna no está disponible en el entorno, buscar alternativa nativa equivalente.
 
-### 2c. CÓMO USAR IMÁGENES PARA DIAGNÓSTICO
+### 2c. ANÁLISIS DE GUI / UI / UX / SO
+
+**GUI (ventanas y diálogos):**
+- Enumerar ventanas visibles con `EnumWindows` + `IsWindowVisible` + `GetWindowTextW`
+- Detectar MessageBox por su título y contenido (ventana modal que bloquea)
+- Mapear ventanas a procesos con `GetWindowThreadProcessId`
+- Identificar diálogos de error (MB_ICONERROR), advertencia (MB_ICONWARNING), información
+- Comparar lista de ventanas ANTES y DESPUÉS de ejecutar para detectar nuevas
+
+**UX (experiencia de usuario):**
+- Verificar si el launcher se compiló con `--console` (ventana visible) o sin (oculto)
+- Detectar si el programa destino es de consola (powershell, cmd, python) y necesita `--console`
+- Verificar directorios de trabajo existen antes de lanzar
+- Verificar que los argumentos sean correctos (escaping, rutas con espacios)
+- Comprobar que el proceso hijo se creó y no murió inmediatamente
+
+**SO (sistema operativo):**
+- `Get-WinEvent` para errores de aplicación, .NET Runtime, Application Hang
+- Windows version: `[Environment]::OSVersion`, `Get-CimInstance Win32_OperatingSystem`
+- Environment variables: `$env:PATH`, `$env:APPDATA`, `$env:TEMP`, `$env:ProgramFiles`
+- Permisos: verificar si el proceso necesita admin, si UAC está activo
+- Arquitectura: 32 vs 64 bits, rutas System32 vs SysWOW64
+
+### 2d. CÓMO USAR IMÁGENES PARA DIAGNÓSTICO
 - No puedo capturar la pantalla del usuario — él debe proporcionar la imagen.
-- SI el usuario envía una captura, PUEDO leerla con el Read tool y describirla.
-- Usar la imagen para leer mensajes de error, códigos, títulos de ventanas, botones.
+- SI el usuario envía una captura, PUEDO leerla con el Read tool y procesarla.
+- Usar Visión IA (modelos multimodales) para:
+  - Leer mensajes de error, códigos numéricos, títulos de ventana
+  - Identificar botones disponibles y su estado (activo/desactivado)
+  - Reconocer íconos (error, advertencia, información, confirmación)
+  - Interpretar el contexto visual completo de la pantalla
+  - Detectar si hay múltiples diálogos superpuestos
+  - Leer texto en imágenes con bajo contraste o fuentes pequeñas
+  - Extraer rutas de archivo, directorios, nombres de programa visibles
+- Describir la imagen al usuario para confirmar que se entendió el error.
 - Si el usuario no sabe tomar captura, indicarle: `Windows+Shift+S` (Recorte y boceto).
-- Preguntar: "¿Puedes enviar una captura de pantalla del error?"
+- Preguntar siempre: "¿Puedes enviar una captura de pantalla del error?"
 
 ### 3. CAUSA RAÍZ MÁS PROBABLE (launcher que no encuentra programa)
 

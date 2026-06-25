@@ -45,16 +45,8 @@ static void WriteLog(const wchar_t *path, const wchar_t *timeStr, const wchar_t 
     fclose(f);
 }
 
-static void LogError(const wchar_t *context, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode)
+static void WriteLogs(const wchar_t *context, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode, const wchar_t *errMsg)
 {
-    wchar_t errMsg[1024] = L"";
-    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        errMsg, 1024, NULL);
-    int len = wcslen(errMsg);
-    while (len > 0 && (errMsg[len-1] == L'\r' || errMsg[len-1] == L'\n' || errMsg[len-1] == L' '))
-        errMsg[--len] = 0;
-
     wchar_t timeStr[64] = L"";
     SYSTEMTIME st;
     GetLocalTime(&st);
@@ -93,6 +85,23 @@ static void LogError(const wchar_t *context, const wchar_t *appPath, const wchar
     }
 }
 
+static void LogError(const wchar_t *context, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode)
+{
+    wchar_t errMsg[1024] = L"";
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        errMsg, 1024, NULL);
+    int len = wcslen(errMsg);
+    while (len > 0 && (errMsg[len-1] == L'\r' || errMsg[len-1] == L'\n' || errMsg[len-1] == L' '))
+        errMsg[--len] = 0;
+    WriteLogs(context, appPath, cmdLine, errCode, errMsg);
+}
+
+static void LogInfo(const wchar_t *context, const wchar_t *appPath, const wchar_t *cmdLine)
+{
+    WriteLogs(context, appPath, cmdLine, 0, L"");
+}
+
 static void ShowError(const wchar_t *title, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode)
 {
     wchar_t errMsg[1024] = L"";
@@ -115,7 +124,7 @@ static void ShowError(const wchar_t *title, const wchar_t *appPath, const wchar_
         ,
         title, cmdLine, appPath, errCode, errMsg);
 
-    LogError(title, appPath, cmdLine, errCode);
+    WriteLogs(title, appPath, cmdLine, errCode, msg);
     MessageBoxW(NULL, msg, APP_NAME, MB_ICONERROR | MB_OK);
 }
 
@@ -165,6 +174,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
     MultiByteToWideChar(CP_UTF8, 0, lpCmdLineA, -1, lpCmdLine, 1024);
 
     wchar_t appPath[MAX_PATH] = L"";
+    wchar_t progName[MAX_PATH] = L"";
     wchar_t args[4096] = L"";
     wchar_t workDir[MAX_PATH] = L"";
     wchar_t msg[4096];
@@ -174,12 +184,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
 
     if (wcslen(PROGRAM_PATH) > 0) {
         isProgramMode = 1;
-        // Resolve full path to program
+        wcscpy(progName, PROGRAM_PATH);
         wchar_t resolved[MAX_PATH];
         if (ResolvePath(PROGRAM_PATH, resolved, MAX_PATH)) {
             wcscpy(appPath, resolved);
-        } else {
-            wcscpy(appPath, PROGRAM_PATH);
         }
         wcscpy(args, PROGRAM_ARGS);
         wcscpy(workDir, WORK_DIR);
@@ -208,11 +216,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
                 return 1;
             }
         }
+        wcscpy(progName, L"powershell.exe");
         wchar_t pwshFull[MAX_PATH];
         if (ResolvePath(L"powershell.exe", pwshFull, MAX_PATH)) {
             wcscpy(appPath, pwshFull);
-        } else {
-            wcscpy(appPath, L"powershell.exe");
         }
         wsprintfW(args, L"-ExecutionPolicy Bypass -NoProfile -WindowStyle %ls -File \"%ls\"",
             FLAG_CONSOLE ? L"Normal" : L"Hidden", scriptPath);
@@ -227,22 +234,33 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
         return 1;
     }
 
+    LogInfo(L"STARTUP", progName, lpCmdLine);
+
+    wchar_t displayPath[MAX_PATH];
+    wcscpy(displayPath, appPath[0] ? appPath : progName);
+
     if (FLAG_ADMIN) {
         SHELLEXECUTEINFOW sei;
         ZeroMemory(&sei, sizeof(sei));
         sei.cbSize = sizeof(sei);
         sei.lpVerb = L"runas";
-        sei.lpFile = appPath;
+        sei.lpFile = displayPath;
         sei.lpParameters = args;
         sei.lpDirectory = wcslen(workDir) > 0 ? workDir : NULL;
         sei.nShow = showCmd;
         if (!ShellExecuteExW(&sei)) {
             DWORD err = GetLastError();
-            ShowError(L"Error al ejecutar como administrador", appPath, args, err);
+            ShowError(L"Error al ejecutar como administrador", displayPath, args, err);
             return 1;
         }
+        LogInfo(L"ADMIN_LAUNCH_OK", displayPath, args);
         if (sei.hProcess) {
             WaitForSingleObject(sei.hProcess, INFINITE);
+            DWORD exitCode = 0;
+            GetExitCodeProcess(sei.hProcess, &exitCode);
+            wchar_t exitCtx[128];
+            wsprintfW(exitCtx, L"EXIT_CODE: %lu", exitCode);
+            LogInfo(exitCtx, displayPath, args);
             CloseHandle(sei.hProcess);
         }
         return 0;
@@ -257,18 +275,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
     ZeroMemory(&pi, sizeof(pi));
 
     wchar_t cmdLine[4096];
-    wsprintfW(cmdLine, L"\"%ls\" %ls", appPath, args);
+    wsprintfW(cmdLine, L"\"%ls\" %ls", progName, args);
 
     DWORD dwFlags = FLAG_CONSOLE ? 0 : CREATE_NO_WINDOW;
 
-    if (!CreateProcessW(appPath, cmdLine, NULL, NULL, FALSE, dwFlags, NULL,
+    if (!CreateProcessW(appPath[0] ? appPath : NULL, cmdLine, NULL, NULL, FALSE, dwFlags, NULL,
         wcslen(workDir) > 0 ? workDir : NULL, &si, &pi))
     {
         DWORD err = GetLastError();
-        ShowError(L"Error al lanzar el programa", appPath, cmdLine, err);
+        ShowError(L"Error al lanzar el programa", displayPath, cmdLine, err);
         return 1;
     }
 
+    LogInfo(L"LAUNCH_OK", displayPath, cmdLine);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return 0;

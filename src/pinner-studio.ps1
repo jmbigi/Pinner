@@ -41,8 +41,7 @@ $presets = @(
     @{Name="Bloc de notas"; Program="notepad.exe"; Args=""; WorkDir=""; Admin=$false; Console=$false; Icon="notepad.ico"},
     @{Name="Explorador"; Program="explorer.exe"; Args=""; WorkDir=""; Admin=$false; Console=$false; Icon="windows.ico"},
     @{Name="VS Code"; Program="code.exe"; Args="."; WorkDir=""; Admin=$false; Console=$true; Icon="visual-studio-code.ico"},
-    @{Name="Python Script"; Program="python.exe"; Args=""; WorkDir=""; Admin=$false; Console=$true; Icon="python.ico"},
-    @{Name="PS desviaciones"; Program="powershell.exe"; Args="-NoExit -Command Set-Location 'C:\Collahuasi\GitLab\desviaciones'"; WorkDir=""; Admin=$false; Console=$false; Icon="powershell.ico"}
+    @{Name="Python Script"; Program="python.exe"; Args=""; WorkDir=""; Admin=$false; Console=$true; Icon="python.ico"}
 )
 
 # --- Build form ---
