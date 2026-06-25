@@ -25,7 +25,7 @@ if (-not (Test-Path $IcoDir)) { New-Item -ItemType Directory -Path $IcoDir -Forc
 foreach ($n in $names) {
   $svg = Join-Path $SvgDir "$n.svg"
   $ico = Join-Path $IcoDir "$n.ico"
-  & $magick convert $svg -define icon:auto-resize=256,64,48,32,16 $ico
+  & $magick $svg -define icon:auto-resize=256,64,48,32,16 $ico
   if ($LASTEXITCODE -eq 0) {
     $s = (Get-Item $ico).Length
     Write-Host "OK $n.ico ($s bytes)"

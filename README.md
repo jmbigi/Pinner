@@ -277,18 +277,20 @@ Pinner\
 │   ├── launcher_template.c     # Template C del launcher
 │   ├── presets.h               # Presets integrados
 │   ├── pinner-studio.ps1       # GUI (PowerShell WinForms)
-│   └── default.ico             # Icono por defecto
+│   └── default.ico             # Icono por defecto (generado)
 ├── exes\                       # Launchers generados (gitignored)
 │   └── Pinner Studio.exe       # GUI envuelta como .exe
 ├── icons\                      # Colección de iconos (SVG + ICO)
-│   ├── svg\                    #   Fuentes SVG
-│   └── ico\                    #   ~60 iconos .ico listos para usar
+│   ├── svg\                    #   Fuentes SVG (descargables con download_icons.ps1)
+│   └── ico\                    #   ~65 iconos .ico listos para usar
 ├── build.cmd                   # Compila pinmaker.exe
 ├── gen_icon.ps1                # Genera src\default.ico
-├── convert_svg_to_ico.ps1      # Convierte SVGs a ICOs
+├── convert_custom.ps1          # Convierte iconos SVG personalizados a ICO
+├── convert_svg_to_ico.ps1      # Convierte SVGs completos a ICOs
 ├── download_icons.ps1          # Descarga iconos desde SimpleIcons
 ├── pinmaker.exe                # Generador (ya compilado, gitignored)
-├── PLAN.md                     # Hoja de ruta
+├── PLAN.md                     # Hoja de ruta / mejoras implementadas
+├── AGENTS.md                   # Instrucciones para el agente de desarrollo
 ├── LICENSE                     # Licencia MIT
 ├── .gitignore
 └── README.md

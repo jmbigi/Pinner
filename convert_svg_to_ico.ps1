@@ -35,7 +35,7 @@ foreach ($svg in $svgs) {
     Write-Host "[$($ok + $fail + 1)/$total] $($svg.Name) -> $icoName ... " -NoNewline
 
     try {
-        $p = Start-Process -FilePath $magick -ArgumentList "convert `"$($svg.FullName)`" -define icon:auto-resize=256,64,48,32,16 `"$icoPath`"" -NoNewWindow -Wait -PassThru
+        $p = Start-Process -FilePath $magick -ArgumentList "`"$($svg.FullName)`" -define icon:auto-resize=256,64,48,32,16 `"$icoPath`"" -NoNewWindow -Wait -PassThru
         if ($p.ExitCode -eq 0 -and (Test-Path $icoPath)) {
             Write-Host "OK" -ForegroundColor Green
             $ok++

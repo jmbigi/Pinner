@@ -14,11 +14,12 @@ if not exist exes mkdir exes
 echo  OK: exes\
 
 echo [4/4] Generando Pinner Studio.exe...
-pinmaker.exe -n "Pinner Studio" -s "src\pinner-studio.ps1" --console > nul 2>&1
+pinmaker.exe -n "Pinner Studio" -s "src\pinner-studio.ps1" --console
 if %ERRORLEVEL% EQU 0 (
     echo  OK: exes\Pinner Studio.exe
 ) else (
-    echo  WARN: No se pudo generar Pinner Studio.exe
+    echo  ERROR: No se pudo generar Pinner Studio.exe
+    echo  Asegurate de que pinmaker.exe compilo correctamente y MinGW-w64 esta en PATH.
 )
 
 echo.

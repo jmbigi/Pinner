@@ -8,11 +8,11 @@ $ErrorActionPreference = "Stop"
 $apps = @(
     @{Slug="googlechrome";          File="chrome.svg"}
     @{Slug="firefoxbrowser";        File="firefox.svg"}
-    @{Slug="microsoftedge";         File="edge.svg"}
+    @{Slug="microsoftedge";         File="microsoft-edge.svg"}
     @{Slug="brave";                 File="brave.svg"}
     @{Slug="opera";                 File="opera.svg"}
     @{Slug="vivaldi";               File="vivaldi.svg"}
-    @{Slug="visualstudiocode";      File="vscode.svg"}
+    @{Slug="visualstudiocode";      File="visual-studio-code.svg"}
     @{Slug="sublimetext";           File="sublime-text.svg"}
     @{Slug="notepadplusplus";       File="notepad-plus-plus.svg"}
     @{Slug="neovim";                File="neovim.svg"}
@@ -24,7 +24,6 @@ $apps = @(
     @{Slug="telegram";              File="telegram.svg"}
     @{Slug="whatsapp";              File="whatsapp.svg"}
     @{Slug="slack";                 File="slack.svg"}
-    @{Slug="microsoftteams";        File="teams.svg"}
     @{Slug="zoom";                  File="zoom.svg"}
     @{Slug="steam";                 File="steam.svg"}
     @{Slug="obsstudio";             File="obs-studio.svg"}
@@ -49,7 +48,6 @@ $apps = @(
     @{Slug="googledrive";           File="google-drive.svg"}
     @{Slug="mega";                  File="mega.svg"}
     @{Slug="7zip";                  File="7zip.svg"}
-    @{Slug="putty";                 File="putty.svg"}
     @{Slug="filezilla";             File="filezilla.svg"}
     @{Slug="qbittorrent";           File="qbittorrent.svg"}
     @{Slug="bitwarden";             File="bitwarden.svg"}
@@ -58,8 +56,6 @@ $apps = @(
     @{Slug="rust";                  File="rust.svg"}
     @{Slug="dotnet";                File="dotnet.svg"}
     @{Slug="transmission";          File="transmission.svg"}
-    @{Slug="calibre";               File="calibre.svg"}
-    @{Slug="handbrake";             File="handbrake.svg"}
     @{Slug="wireshark";             File="wireshark.svg"}
     @{Slug="mysql";                 File="mysql.svg"}
     @{Slug="redis";                 File="redis.svg"}

@@ -173,6 +173,22 @@ void escape_c_string(const wchar_t *src, wchar_t *dst, int max)
     dst[k] = 0;
 }
 
+void sanitize_filename(const wchar_t *src, wchar_t *dst, int max)
+{
+    int i, j;
+    for (i = 0, j = 0; src[i] && j < max - 2; i++) {
+        wchar_t c = src[i];
+        if (c == L'\\' || c == L'/' || c == L':' || c == L'*' || c == L'?'
+            || c == L'<' || c == L'>' || c == L'|' || c == L'"') {
+            dst[j++] = L' ';
+        } else if ((unsigned int)c >= 32) {
+            dst[j++] = c;
+        }
+    }
+    while (j > 0 && dst[j-1] == L' ') j--;
+    dst[j] = 0;
+}
+
 wchar_t* find_template(wchar_t *buf, int bufSize)
 {
     wchar_t modPath[MAX_PATH];
@@ -260,7 +276,10 @@ int build_launcher(Config *cfg)
     swprintf(tempC, MAX_PATH, L"%spinner_XXXX.c", tempDir);
     swprintf(tempRc, MAX_PATH, L"%spinner_XXXX.rc", tempDir);
     swprintf(tempRes, MAX_PATH, L"%spinner_XXXX.res", tempDir);
-    swprintf(outExe, MAX_PATH, L"%s\\%s.exe", cfg->output, cfg->name);
+    wchar_t safeName[MAX_PATH];
+    sanitize_filename(cfg->name, safeName, MAX_PATH);
+    if (safeName[0] == 0) wcscpy(safeName, L"Launcher");
+    swprintf(outExe, MAX_PATH, L"%s\\%s.exe", cfg->output, safeName);
 
     wchar_t *tmpl = find_template(templatePath, MAX_PATH);
     if (!tmpl) {
@@ -325,14 +344,14 @@ int build_launcher(Config *cfg)
     if (hasIcon) {
         f = _wfopen(tempRc, L"wb");
         if (f) {
-            wchar_t iconFwd[MAX_PATH];
+            wchar_t iconFwd[MAX_PATH * 2];
             int j;
-            for (j = 0; cfg->icon[j] && j < MAX_PATH - 1; j++)
+            for (j = 0; cfg->icon[j] && j < MAX_PATH * 2 - 2; j++)
                 iconFwd[j] = (cfg->icon[j] == L'\\') ? L'/' : cfg->icon[j];
             iconFwd[j] = 0;
 
-            wchar_t nameFwd[MAX_PATH];
-            for (j = 0; cfg->name[j] && j < MAX_PATH - 1; j++)
+            wchar_t nameFwd[MAX_PATH * 2];
+            for (j = 0; cfg->name[j] && j < MAX_PATH * 2 - 2; j++)
                 nameFwd[j] = (cfg->name[j] == L'\\') ? L'/' : cfg->name[j];
             nameFwd[j] = 0;
 
