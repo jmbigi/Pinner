@@ -1,9 +1,23 @@
 param(
-    [string]$SvgDir = "C:\Desa\Pinner\icons\svg",
-    [string]$IcoDir = "C:\Desa\Pinner\icons\ico"
+    [string]$SvgDir = ".\icons\svg",
+    [string]$IcoDir = ".\icons\ico"
 )
 
-$magick = "C:\Program Files\ImageMagick-7.1.1-Q16\magick.exe"
+# Detect ImageMagick in common locations
+$magickCandidates = @(
+    "magick.exe",
+    "${env:ProgramFiles}\ImageMagick-*\magick.exe",
+    "${env:ProgramFiles}\ImageMagick-*\convert.exe"
+)
+$magick = $null
+foreach ($candidate in $magickCandidates) {
+    $resolved = Resolve-Path $candidate -ErrorAction SilentlyContinue
+    if ($resolved) { $magick = $resolved[-1].Path; break }
+}
+if (-not $magick) { Write-Host "ERROR: ImageMagick no encontrado. Instalalo o pasa la ruta en -SvgDir/-IcoDir"; exit 1 }
+
+$SvgDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($SvgDir)
+$IcoDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($IcoDir)
 
 if (-not (Test-Path $IcoDir)) { New-Item -ItemType Directory -Path $IcoDir -Force | Out-Null }
 

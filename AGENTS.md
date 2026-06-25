@@ -117,16 +117,17 @@ Si alguna no está disponible en el entorno, buscar alternativa nativa equivalen
 
 ### 3. CAUSA RAÍZ MÁS PROBABLE (launcher que no encuentra programa)
 
-```
-pinmaker.c: build_launcher() — lineas 300-307
-  if (no tiene '\' ni ':') {
-      swprintf(programAbs, L"%s\\%s", cwd, cfg->program);
-      → Convierte "powershell.exe" en "C:\CurrentDir\powershell.exe"
-  }
-```
+**STATUS: CORREGIDO** (commit `8a0f601`)
 
-**Solución**: NO resolver rutas de programa en pinmaker. Dejar el nombre limpio
-y que el launcher lo busque en PATH en tiempo de ejecución.
+El bug original: pinmaker.c resolvía rutas relativas a cwd en tiempo de
+compilación, inyectando `C:\CurrentDir\powershell.exe` como PROGRAM_PATH.
+
+**Fix aplicado**:
+- pinmaker.c ya NO resuelve rutas de programa — las embedde tal cual
+- launcher_template.c tiene `ResolvePath(name, ...)` que busca en PATH,
+  System32, y WindowsPowerShell en tiempo de ejecución (`src/launcher_template.c:131-167`)
+- CreateProcessW recibe appPath vacío cuando el programa no tiene ruta
+  absoluta, forzando búsqueda en PATH automática
 
 ### 4. NO SOBREINGENIERIZAR
 - No agregar funciones nuevas hasta encontrar la causa raíz.

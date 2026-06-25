@@ -1,7 +1,8 @@
 param(
-    [string]$OutputDir = "C:\Desa\Pinner\icons\svg"
+    [string]$OutputDir = ".\icons\svg"
 )
 
+$OutputDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputDir)
 $ErrorActionPreference = "Stop"
 
 $apps = @(

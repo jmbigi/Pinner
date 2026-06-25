@@ -46,14 +46,15 @@ Dos modos de uso:
 ## Instalación
 
 ```cmd
-C:\Desa\Pinner> build.cmd
+cd Pinner
+build.cmd
 ```
 
 Esto:
 1. Genera `src\default.ico` (icono por defecto "P")
 2. Compila `pinmaker.exe` (generador de launchers)
 3. Crea carpeta `exes\`
-4. Verifica que todo funciona
+4. Genera `Pinner Studio.exe` (verifica que pinmaker funciona)
 
 ---
 
@@ -62,7 +63,7 @@ Esto:
 La forma más fácil de crear launchers: doble clic y configura visualmente.
 
 ```cmd
-C:\Desa\Pinner> .\exes\Pinner Studio.exe
+.\exes\Pinner Studio.exe
 ```
 
 O desde el código fuente:
@@ -103,7 +104,7 @@ El `.exe` busca el script en la ruta absoluta al ejecutarse.
 ### Anclar al taskbar
 
 ```cmd
-cd C:\Desa\Pinner\exes
+cd exes
 # Clic derecho en "Chrome Privado.exe" -> "Anclar a la barra de tareas"
 ```
 
@@ -138,9 +139,9 @@ pinmaker -n "Mi Chrome" --preset "Chrome Privado"
 pinmaker -n "Terminal" --preset "Terminal en carpeta" -d "C:\Proyecto"
 ```
 
-Presets disponibles: Chrome Privado, Edge Privado, Firefox Privado,
-Terminal en carpeta, Terminal Admin, Símbolo del sistema, Abrir URL,
-Bloc de notas, Explorador, VS Code, Python Script, PS desviaciones.
+Presets disponibles: Chrome Privado, Chrome Perfil Trabajo, Edge Privado,
+Firefox Privado, Terminal en carpeta, Terminal Admin, Símbolo del sistema,
+Abrir URL, Bloc de notas, Explorador, VS Code, Python Script.
 
 Los flags explícitos sobreescriben los valores del preset. Ej:
 
@@ -167,7 +168,7 @@ pinmaker -n "PS Proyecto" -p "powershell.exe" -a "-NoExit -Command Set-Location 
 ### Ejecutar como administrador
 
 ```cmd
-pinmaker -n "VPN Empresa" -p "C:\VPN\client.exe" --admin -i icons\ico\vpn.ico
+pinmaker -n "VPN Empresa" -p "C:\VPN\client.exe" --admin
 ```
 
 ### App Python con consola visible
@@ -270,22 +271,25 @@ Se ejecuta en cualquier Windows con PowerShell 5+ (viene instalado).
 ## Estructura del proyecto
 
 ```
-C:\Desa\Pinner\
+Pinner\
 ├── src\
 │   ├── pinmaker.c              # Generador de launchers (C)
 │   ├── launcher_template.c     # Template C del launcher
 │   ├── presets.h               # Presets integrados
 │   ├── pinner-studio.ps1       # GUI (PowerShell WinForms)
 │   └── default.ico             # Icono por defecto
-├── exes\                       # Launchers generados
-│   ├── PS desviaciones.exe     # Ejemplo: terminal en desviaciones
+├── exes\                       # Launchers generados (gitignored)
 │   └── Pinner Studio.exe       # GUI envuelta como .exe
 ├── icons\                      # Colección de iconos (SVG + ICO)
-│   └── ico\                    #   ~60 iconos listos para usar
+│   ├── svg\                    #   Fuentes SVG
+│   └── ico\                    #   ~60 iconos .ico listos para usar
 ├── build.cmd                   # Compila pinmaker.exe
 ├── gen_icon.ps1                # Genera src\default.ico
-├── pinmaker.exe                # Generador (ya compilado)
+├── convert_svg_to_ico.ps1      # Convierte SVGs a ICOs
+├── download_icons.ps1          # Descarga iconos desde SimpleIcons
+├── pinmaker.exe                # Generador (ya compilado, gitignored)
 ├── PLAN.md                     # Hoja de ruta
+├── LICENSE                     # Licencia MIT
 ├── .gitignore
 └── README.md
 ```
@@ -311,4 +315,4 @@ Software libre, compilación local, cero dependencias externas.
 
 ## Licencia
 
-MIT — Haz lo que quieras.
+MIT — Haz lo que quieras. Ver [LICENSE](LICENSE).
