@@ -3,12 +3,25 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Pinmaker = Join-Path $ScriptDir "pinmaker.exe"
-$IconDir = Join-Path $ScriptDir "icons\ico"
+
+function Find-PinnerRoot {
+    $dir = $ScriptDir
+    for ($i = 0; $i -lt 3; $i++) {
+        if (Test-Path (Join-Path $dir "pinmaker.exe")) { return $dir }
+        $dir = Split-Path -Parent $dir
+        if (-not $dir) { break }
+    }
+    return $ScriptDir
+}
+
+$PinnerRoot = Find-PinnerRoot
+$Pinmaker = Join-Path $PinnerRoot "pinmaker.exe"
+$IconDir = Join-Path $PinnerRoot "icons\ico"
+$ExeDir = Join-Path $PinnerRoot "exes"
 
 if (-not (Test-Path $Pinmaker)) {
     [System.Windows.Forms.MessageBox]::Show(
-        "No se encuentra pinmaker.exe en $ScriptDir",
+        "No se encuentra pinmaker.exe`nBuscado en: $Pinmaker",
         "PINNER STUDIO", [System.Windows.Forms.MessageBoxButtons]::OK,
         [System.Windows.Forms.MessageBoxIcon]::Error)
     exit 1
@@ -31,12 +44,6 @@ $presets = @(
     @{Name="Python Script"; Program="python.exe"; Args=""; WorkDir=""; Admin=$false; Console=$true; Icon="python.ico"},
     @{Name="PS desviaciones"; Program="powershell.exe"; Args="-NoExit -Command Set-Location 'C:\Collahuasi\GitLab\desviaciones'"; WorkDir=""; Admin=$false; Console=$false; Icon="powershell.ico"}
 )
-
-function Get-PinnerDir {
-    $dir = Split-Path -Parent $ScriptDir
-    if (Test-Path (Join-Path $dir "pinmaker.exe")) { return $dir }
-    return $ScriptDir
-}
 
 # --- Build form ---
 $form = New-Object System.Windows.Forms.Form
@@ -285,14 +292,14 @@ $btnGenerate.Add_Click({
 
     # Build pinmaker args
     $pmArgs = @()
-    $pmArgs += "-n"; $pmArgs += "`"$name`""
-    $pmArgs += "-p"; $pmArgs += "`"$prog`""
-    if ($args) { $pmArgs += "-a"; $pmArgs += "`"$args`"" }
-    if ($dir) { $pmArgs += "-d"; $pmArgs += "`"$dir`"" }
+    $pmArgs += "-n"; $pmArgs += $name
+    $pmArgs += "-p"; $pmArgs += $prog
+    if ($args) { $pmArgs += "-a"; $pmArgs += $args }
+    if ($dir) { $pmArgs += "-d"; $pmArgs += $dir }
     if ($admin) { $pmArgs += "--admin" }
     if ($console) { $pmArgs += "--console" }
-    if ($icon -and (Test-Path $icon)) { $pmArgs += "-i"; $pmArgs += "`"$icon`"" }
-    $pmArgs += "-o"; $pmArgs += "`"$(Join-Path $ScriptDir exes)`""
+    if ($icon -and (Test-Path $icon)) { $pmArgs += "-i"; $pmArgs += $icon }
+    $pmArgs += "-o"; $pmArgs += $ExeDir
 
     $proc = Start-Process -FilePath $Pinmaker -ArgumentList $pmArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput "$env:TEMP\pinner_out.txt" -RedirectStandardError "$env:TEMP\pinner_err.txt"
     $output = Get-Content "$env:TEMP\pinner_out.txt" -Raw
