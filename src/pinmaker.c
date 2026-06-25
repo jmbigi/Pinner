@@ -22,6 +22,7 @@ typedef struct {
     wchar_t icon[MAX_VAL];
     wchar_t output[MAX_VAL];
     wchar_t preset[MAX_VAL];
+    wchar_t batch[MAX_VAL];
     int admin;
     int console;
     int presetApplied;
@@ -46,7 +47,10 @@ void show_help(void)
     printf("  --admin       Ejecutar como administrador\n");
     printf("  --console     Mostrar ventana de consola\n");
     printf("  --output,-o   Carpeta salida (default: .\\exes)\n");
+    printf("  --batch       Generar multiples launchers desde archivo JSON\n");
     printf("  --help,-h     Esta ayuda\n\n");
+    printf("BATCH:\n");
+    printf("  pinmaker --batch launchers.json\n\n");
     printf("PRESETS:\n");
     printf("  pinmaker --preset list      Lista todos los presets disponibles\n");
     printf("  pinmaker -n \"Mi Chrome\" --preset \"Chrome Privado\"\n\n");
@@ -110,6 +114,7 @@ int parse_args(int argc, char *argv[], Config *cfg)
     wcscpy(cfg->workdir, L"");
     wcscpy(cfg->icon, L"");
     wcscpy(cfg->preset, L"");
+    wcscpy(cfg->batch, L"");
     wcscpy(cfg->output, L".\\exes");
     cfg->admin = 0;
     cfg->console = 0;
@@ -143,6 +148,9 @@ int parse_args(int argc, char *argv[], Config *cfg)
         }
         else if (strcmp(argv[i], "--preset") == 0) {
             if (++i < argc) to_wide(argv[i], cfg->preset, MAX_VAL);
+        }
+        else if (strcmp(argv[i], "--batch") == 0) {
+            if (++i < argc) to_wide(argv[i], cfg->batch, MAX_VAL);
         }
         else if (strcmp(argv[i], "--admin") == 0) {
             cfg->admin = 1;
@@ -199,6 +207,26 @@ int has_define_line(const char *line)
     return 0;
 }
 
+int is_console_app(const wchar_t *program)
+{
+    const wchar_t *consoleApps[] = {
+        L"powershell.exe", L"pwsh.exe", L"cmd.exe",
+        L"python.exe", L"python3.exe",
+        L"node.exe", L"git.exe",
+        L"bash.exe", L"wsl.exe",
+        NULL
+    };
+    // Extract filename from path
+    const wchar_t *name = program;
+    for (const wchar_t *p = program; *p; p++) {
+        if (*p == L'\\' || *p == L'/') name = p + 1;
+    }
+    for (int i = 0; consoleApps[i]; i++) {
+        if (_wcsicmp(name, consoleApps[i]) == 0) return 1;
+    }
+    return 0;
+}
+
 int build_launcher(Config *cfg)
 {
     wchar_t templatePath[MAX_PATH];
@@ -221,6 +249,10 @@ int build_launcher(Config *cfg)
     if (!hasScript && !hasProgram) {
         printf("ERROR: Necesitas --script o --program.\n");
         return 0;
+    }
+
+    if (hasProgram && !cfg->console && is_console_app(cfg->program)) {
+        wprintf(L"WARN: %ls parece un programa de consola. Sin --console se ejecutara oculto.\n", cfg->program);
     }
 
     GetTempPathW(MAX_PATH, tempDir);
@@ -265,18 +297,10 @@ int build_launcher(Config *cfg)
         fprintf(f, "#define PROGRAM_ARGS L\"\"\n");
         fprintf(f, "#define WORK_DIR L\"\"\n");
     } else {
-        wchar_t programAbs[MAX_PATH];
-        if (wcschr(cfg->program, L':') || cfg->program[0] == L'\\') {
-            wcscpy(programAbs, cfg->program);
-        } else {
-            wchar_t cwd[MAX_PATH];
-            GetCurrentDirectoryW(MAX_PATH, cwd);
-            swprintf(programAbs, MAX_PATH, L"%s\\%s", cwd, cfg->program);
-        }
         wchar_t escapedProgram[MAX_PATH * 2];
         wchar_t escapedArgs[MAX_PATH * 2];
         wchar_t escapedWorkDir[MAX_PATH * 2];
-        escape_c_string(programAbs, escapedProgram, MAX_PATH * 2);
+        escape_c_string(cfg->program, escapedProgram, MAX_PATH * 2);
         escape_c_string(cfg->args, escapedArgs, MAX_PATH * 2);
         escape_c_string(cfg->workdir, escapedWorkDir, MAX_PATH * 2);
 
@@ -375,6 +399,156 @@ int build_launcher(Config *cfg)
     }
 }
 
+// ============================================================
+// Batch JSON processing (Fase 6)
+// ============================================================
+
+static const wchar_t* skipw(const wchar_t *p)
+{
+    while (*p && *p <= L' ') p++;
+    return p;
+}
+
+static const wchar_t* parse_json_string_val(const wchar_t *p, wchar_t *out, int max)
+{
+    if (*p == L'"') p++;
+    int i = 0;
+    while (*p && *p != L'"' && i < max - 1) {
+        if (*p == L'\\') { p++; if (*p) out[i++] = *p; }
+        else out[i++] = *p;
+        p++;
+    }
+    out[i] = 0;
+    if (*p == L'"') p++;
+    return p;
+}
+
+static const wchar_t* parse_json_key(const wchar_t *p, wchar_t *out, int max)
+{
+    if (*p == L'"') p++;
+    int i = 0;
+    while (*p && *p != L'"' && i < max - 1) {
+        if (*p == L'\\') { p++; if (*p) out[i++] = *p; }
+        else out[i++] = *p;
+        p++;
+    }
+    out[i] = 0;
+    if (*p == L'"') p++;
+    return p;
+}
+
+int parse_batch_file(const wchar_t *jsonPath)
+{
+    FILE *f = _wfopen(jsonPath, L"rb");
+    if (!f) {
+        wprintf(L"ERROR: No se puede abrir %ls\n", jsonPath);
+        return 0;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+
+    if (len <= 0) { fclose(f); return 0; }
+
+    char *utf8 = (char*)malloc((size_t)len + 1);
+    if (!utf8) { fclose(f); return 0; }
+    fread(utf8, 1, len, f);
+    utf8[len] = 0;
+    fclose(f);
+
+    char *start = utf8;
+    if ((unsigned char)start[0] == 0xEF && (unsigned char)start[1] == 0xBB && (unsigned char)start[2] == 0xBF)
+        start += 3;
+
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, start, -1, NULL, 0);
+    wchar_t *wb = (wchar_t*)malloc((size_t)wlen * sizeof(wchar_t));
+    if (!wb) { free(utf8); return 0; }
+    MultiByteToWideChar(CP_UTF8, 0, start, -1, wb, wlen);
+    free(utf8);
+
+    const wchar_t *p = skipw(wb);
+
+    if (*p != L'[') {
+        wprintf(L"ERROR: Se esperaba '[' al inicio del JSON\n");
+        free(wb);
+        return 0;
+    }
+    p = skipw(p + 1);
+
+    int count = 0;
+    int total = 0;
+
+    while (*p && *p != L']') {
+        p = skipw(p);
+        if (*p != L'{') break;
+        p = skipw(p + 1);
+
+        Config item;
+        memset(&item, 0, sizeof(item));
+        wcscpy(item.output, L".\\exes");
+
+        while (*p && *p != L'}') {
+            p = skipw(p);
+            if (*p == L'}') break;
+
+            wchar_t key[MAX_VAL] = {0};
+            p = parse_json_key(p, key, MAX_VAL);
+            p = skipw(p);
+            if (*p != L':') continue;
+            p = skipw(p + 1);
+
+            if (*p == L'"') {
+                wchar_t val[MAX_VAL] = {0};
+                p = parse_json_string_val(p, val, MAX_VAL);
+
+                if (_wcsicmp(key, L"name") == 0) wcscpy(item.name, val);
+                else if (_wcsicmp(key, L"script") == 0) wcscpy(item.script, val);
+                else if (_wcsicmp(key, L"program") == 0) wcscpy(item.program, val);
+                else if (_wcsicmp(key, L"args") == 0) wcscpy(item.args, val);
+                else if (_wcsicmp(key, L"workdir") == 0) wcscpy(item.workdir, val);
+                else if (_wcsicmp(key, L"icon") == 0) wcscpy(item.icon, val);
+                else if (_wcsicmp(key, L"output") == 0) wcscpy(item.output, val);
+                else if (_wcsicmp(key, L"preset") == 0) wcscpy(item.preset, val);
+            } else if (_wcsnicmp(p, L"true", 4) == 0) {
+                if (_wcsicmp(key, L"admin") == 0) item.admin = 1;
+                else if (_wcsicmp(key, L"console") == 0) item.console = 1;
+                p += 4;
+            } else if (_wcsnicmp(p, L"false", 5) == 0) {
+                p += 5;
+            }
+
+            p = skipw(p);
+            if (*p == L',') p++;
+        }
+        if (*p == L'}') p++;
+        p = skipw(p);
+        if (*p == L',') p++;
+
+        total++;
+
+        if (wcslen(item.name) == 0) {
+            wprintf(L"  [%d] WARN: Item sin nombre, se salta\n", total);
+            continue;
+        }
+
+        if (wcslen(item.preset) > 0) {
+            if (!apply_preset(&item, item.preset)) {
+                wprintf(L"  [%d] WARN: Preset \"%ls\" no encontrado para \"%ls\"\n", total, item.preset, item.name);
+            }
+        }
+
+        wprintf(L"\n--- [%d] %ls ---\n", total, item.name);
+        if (build_launcher(&item)) {
+            count++;
+        }
+    }
+
+    free(wb);
+    wprintf(L"\n=== Batch: %d/%d launcher(s) generado(s) ===\n", count, total);
+    return count;
+}
+
 int main(int argc, char *argv[])
 {
     Config cfg;
@@ -390,6 +564,11 @@ int main(int argc, char *argv[])
     if (wcslen(cfg.preset) > 0 && _wcsicmp(cfg.preset, L"list") == 0) {
         list_presets();
         return 0;
+    }
+
+    // Handle --batch
+    if (wcslen(cfg.batch) > 0) {
+        return parse_batch_file(cfg.batch) > 0 ? 0 : 1;
     }
 
     // Apply preset if specified
