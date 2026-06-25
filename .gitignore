@@ -1,0 +1,14 @@
+exes/
+pinmaker.exe
+
+# Generated or temp
+*.exe
+*.res
+*.obj
+*.o
+*.user
+output/
+
+# OS
+Thumbs.db
+.DS_Store

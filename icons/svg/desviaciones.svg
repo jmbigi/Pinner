@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="48" fill="#2B6CB0"/>
+  <g transform="translate(128,128)">
+    <!-- Vertical drill hole -->
+    <line x1="0" y1="-80" x2="0" y2="80" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    <!-- Deviation curve -->
+    <path d="M0 -60 Q20 -30 40 0 Q60 30 70 80" fill="none" stroke="#FBD38D" stroke-width="8" stroke-linecap="round"/>
+    <!-- Deviation arrow -->
+    <polygon points="70,80 58,60 62,72 50,68" fill="#FBD38D"/>
+    <!-- DLS indicator arc -->
+    <path d="M-40 -60 Q-10 -50 0 -30" fill="none" stroke="#90CDF4" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="0" cy="-80" r="12" fill="#FFFFFF"/>
+    <circle cx="0" cy="-80" r="6" fill="#2B6CB0"/>
+  </g>
+</svg>

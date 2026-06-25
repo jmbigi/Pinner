@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="48" fill="#D53F8C"/>
+  <g transform="translate(128,128)">
+    <!-- Color palette circle -->
+    <circle cx="0" cy="0" r="70" fill="#FFFFFF"/>
+    <!-- Color swatches -->
+    <circle cx="0" cy="-45" r="22" fill="#E53E3E"/>
+    <circle cx="42" cy="-14" r="22" fill="#DD6B20"/>
+    <circle cx="26" cy="36" r="22" fill="#D69E2E"/>
+    <circle cx="-26" cy="36" r="22" fill="#38A169"/>
+    <circle cx="-42" cy="-14" r="22" fill="#3182CE"/>
+    <!-- Centered cross / target -->
+    <circle cx="0" cy="0" r="12" fill="#D53F8C"/>
+    <circle cx="0" cy="0" r="5" fill="#FFFFFF"/>
+    <!-- Crosshair lines -->
+    <line x1="-20" y1="0" x2="20" y2="0" stroke="#D53F8C" stroke-width="3"/>
+    <line x1="0" y1="-20" x2="0" y2="20" stroke="#D53F8C" stroke-width="3"/>
+  </g>
+</svg>

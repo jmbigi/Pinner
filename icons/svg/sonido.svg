@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="48" fill="#319795"/>
+  <g transform="translate(128,140)">
+    <!-- Microphone body -->
+    <rect x="-16" y="-60" width="32" height="50" rx="16" fill="#FFFFFF"/>
+    <!-- Microphone grille lines -->
+    <line x1="-12" y1="-40" x2="12" y2="-40" stroke="#319795" stroke-width="2"/>
+    <line x1="-12" y1="-34" x2="12" y2="-34" stroke="#319795" stroke-width="2"/>
+    <line x1="-12" y1="-28" x2="12" y2="-28" stroke="#319795" stroke-width="2"/>
+    <!-- Microphone base/handle -->
+    <rect x="-6" y="-10" width="12" height="40" rx="4" fill="#FFFFFF"/>
+    <!-- Base -->
+    <rect x="-20" y="30" width="40" height="8" rx="4" fill="#E2E8F0"/>
+    <!-- Sound waves - left -->
+    <path d="M-50 -30 Q-35 -45 -50 -60" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <path d="M-65 -20 Q-45 -45 -65 -70" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+    <!-- Sound waves - right -->
+    <path d="M50 -30 Q35 -45 50 -60" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <path d="M65 -20 Q45 -45 65 -70" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+  </g>
+</svg>
