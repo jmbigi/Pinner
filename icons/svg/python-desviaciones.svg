@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a365d"/>
+      <stop offset="100%" stop-color="#2b6cb0"/>
+    </linearGradient>
+  </defs>
+  <!-- Fondo azul degradado -->
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <!-- Python logo (simplificado) - serpiente estilizada -->
+  <g transform="translate(128,80)">
+    <!-- Cuerpo serpiente - azul Python -->
+    <path d="M-20,-30 Q-50,-30 -55,-10 Q-60,10 -40,20 Q-20,30 0,25 Q20,20 30,35 Q40,50 25,60 Q10,70 -10,65 Q-30,60 -35,50"
+          fill="none" stroke="#FFD43B" stroke-width="10" stroke-linecap="round"/>
+    <!-- Cabeza serpiente -->
+    <circle cx="-45" cy="-5" r="10" fill="#FFD43B"/>
+    <circle cx="-48" cy="-8" r="3" fill="#1a365d"/>
+    <!-- Mitad azul del icono Python -->
+    <path d="M-20,-30 Q-10,-40 10,-35 Q30,-30 35,-15 Q40,0 30,10"
+          fill="none" stroke="#3776AB" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <!-- Letra D grande -->
+  <text x="128" y="195" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"
+        font-size="100" font-weight="bold" fill="#FFD43B" stroke="#3776AB" stroke-width="3">
+    D
+  </text>
+</svg>
