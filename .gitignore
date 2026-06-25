@@ -10,6 +10,9 @@ pinmaker.exe
 *.log
 output/
 
+# Scripts personales del usuario (no se suben al repo)
+user_scripts/
+
 # OS
 Thumbs.db
 .DS_Store

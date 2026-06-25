@@ -38,6 +38,17 @@
   - Temporales: limpiar después de usarlos.
 - Pedir al usuario ejecutar el script, no ejecutarlo por él si requiere interacción GUI.
 
+### 0f. NO PUBLICAR DATOS PRIVADOS
+- **NUNCA** incluir en commits: rutas de trabajo reales (C:\Collahuasi\*, etc.),
+  nombres de empresas (Collahuasi, Geoblast, AppNew), tokens, API keys,
+  credenciales, o cualquier información identificable de personas o empresas.
+- `user_scripts/` está en `.gitignore` — cualquier script personalizado
+  del usuario debe ir ahí, no en `src/` ni en la raíz del repo.
+- Antes de commiteaar: verificar `git status --short` y `git diff` para
+  asegurar que no hay archivos privados sueltos.
+- Si se necesita un ejemplo en el repo, usar placeholders genéricos
+  (ej: `C:\ruta\de\tu\proyecto`, `.\activar_entorno.ps1`).
+
 ## Cómo depurar un launcher que "no funciona"
 
 ### 1. ESCUCHAR AL USUARIO
@@ -165,3 +176,9 @@ $after | ? { $_.Id -notin $before.Id }  # nuevo proceso?
 - Un MessageBox en GUI app se ve como proceso vivo desde CLI
 - Si el usuario puede, pedir captura de pantalla o descripción exacta del error visual
 - Las imágenes se pueden leer con herramientas de visión si están disponibles
+
+### 7. SCRIPTS PERSONALES (user_scripts/)
+- `user_scripts/` está en `.gitignore` — usar para scripts personales del usuario
+- No modificar scripts en `user_scripts/` que no conozcas
+- El flujo típico: `user_scripts/mi_script.ps1` → `pinmaker -n "Nombre" -s "user_scripts\mi_script.ps1" --console`
+- `--console` es necesario para scripts que interactúan con la terminal

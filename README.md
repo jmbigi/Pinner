@@ -189,6 +189,22 @@ pinmaker -n "Portal" -p "cmd.exe" -a "/c start https://portal.cia"
 pinmaker -n "Backup" -s "C:\scripts\backup.ps1" --admin --console
 ```
 
+### Scripts desde user_scripts (recomendado)
+
+Para flujos de trabajo complejos (activar venv, ejecutar Python, etc.),
+creá un `.ps1` en la carpeta `user_scripts\` y genera el launcher apuntando ahí:
+
+```cmd
+user_scripts\dev.ps1                    # Tu script con la lógica
+pinmaker -n "Mi Proyecto" -s "user_scripts\dev.ps1" --console
+```
+
+El `.exe` ejecuta el script de PowerShell con todo lo que éste contenga.
+Ventajas:
+- El script se edita sin recompilar el launcher
+- `user_scripts\` está en `.gitignore` — no se sube al repo
+- Usá `--console` para ver la terminal
+
 ### Batch desde JSON (múltiples launchers de una sola vez)
 
 ```cmd
@@ -288,6 +304,8 @@ Pinner\
 ├── convert_custom.ps1          # Convierte iconos SVG personalizados a ICO
 ├── convert_svg_to_ico.ps1      # Convierte SVGs completos a ICOs
 ├── download_icons.ps1          # Descarga iconos desde SimpleIcons
+├── user_scripts\                # Scripts personalizados del usuario (gitignored)
+│   └── _example.ps1             #   Template de ejemplo
 ├── pinmaker.exe                # Generador (ya compilado, gitignored)
 ├── PLAN.md                     # Hoja de ruta / mejoras implementadas
 ├── AGENTS.md                   # Instrucciones para el agente de desarrollo
