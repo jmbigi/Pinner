@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <stdio.h>
 
 #ifndef APP_NAME
@@ -31,10 +32,137 @@
 #  define FLAG_CONSOLE 0
 #endif
 
+static void WriteLog(const wchar_t *path, const wchar_t *timeStr, const wchar_t *context,
+    const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode, const wchar_t *errMsg)
+{
+    FILE *f = _wfopen(path, L"a, ccs=UTF-8");
+    if (!f) return;
+    fwprintf(f, L"[%ls] %ls\n", timeStr, context);
+    fwprintf(f, L"  App : %ls\n", appPath);
+    fwprintf(f, L"  Cmd : %ls\n", cmdLine);
+    fwprintf(f, L"  Err : %lu - %ls\n", errCode, errMsg);
+    fwprintf(f, L"\n");
+    fclose(f);
+}
+
+static void LogError(const wchar_t *context, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode)
+{
+    wchar_t errMsg[1024] = L"";
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        errMsg, 1024, NULL);
+    int len = wcslen(errMsg);
+    while (len > 0 && (errMsg[len-1] == L'\r' || errMsg[len-1] == L'\n' || errMsg[len-1] == L' '))
+        errMsg[--len] = 0;
+
+    wchar_t timeStr[64] = L"";
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    wsprintfW(timeStr, L"%04d-%02d-%02d %02d:%02d:%02d",
+        st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+
+    wchar_t exePath[MAX_PATH], exeName[MAX_PATH];
+    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    wchar_t *slash = wcsrchr(exePath, L'\\');
+    wcscpy(exeName, slash ? slash + 1 : exePath);
+    wchar_t *dot = wcsrchr(exeName, L'.');
+    if (dot) *dot = 0;
+
+    wchar_t logNear[MAX_PATH];
+    wsprintfW(logNear, L"%ls.log", exePath);
+    WriteLog(logNear, timeStr, context, appPath, cmdLine, errCode, errMsg);
+
+    wchar_t appData[MAX_PATH];
+    if (GetEnvironmentVariableW(L"APPDATA", appData, MAX_PATH) > 0) {
+        wchar_t adPinner[MAX_PATH], adLog[MAX_PATH];
+        wsprintfW(adPinner, L"%ls\\Pinner", appData);
+        CreateDirectoryW(adPinner, NULL);
+        wsprintfW(adLog, L"%ls\\logs", adPinner);
+        CreateDirectoryW(adLog, NULL);
+        wsprintfW(adLog, L"%ls\\logs\\%ls.log", adPinner, exeName);
+        WriteLog(adLog, timeStr, context, appPath, cmdLine, errCode, errMsg);
+    }
+
+    wchar_t temp[MAX_PATH];
+    if (GetEnvironmentVariableW(L"TEMP", temp, MAX_PATH) > 0) {
+        wchar_t tmpDir[MAX_PATH], tmpLog[MAX_PATH];
+        wsprintfW(tmpDir, L"%ls\\Pinner", temp);
+        CreateDirectoryW(tmpDir, NULL);
+        wsprintfW(tmpLog, L"%ls\\%ls.log", tmpDir, exeName);
+        WriteLog(tmpLog, timeStr, context, appPath, cmdLine, errCode, errMsg);
+    }
+}
+
+static void ShowError(const wchar_t *title, const wchar_t *appPath, const wchar_t *cmdLine, DWORD errCode)
+{
+    wchar_t errMsg[1024] = L"";
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, errCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        errMsg, 1024, NULL);
+    int len = wcslen(errMsg);
+    while (len > 0 && (errMsg[len-1] == L'\r' || errMsg[len-1] == L'\n' || errMsg[len-1] == L' '))
+        errMsg[--len] = 0;
+
+    wchar_t msg[4096];
+    wsprintfW(msg,
+        L"%ls\n\n"
+        L"Comando: %ls\n"
+        L"Programa: %ls\n\n"
+        L"Error %lu: %ls"
+#if FLAG_CONSOLE == 0
+        L"\n\nSUGERENCIA: Prueba a generar el launcher con --console"
+#endif
+        ,
+        title, cmdLine, appPath, errCode, errMsg);
+
+    LogError(title, appPath, cmdLine, errCode);
+    MessageBoxW(NULL, msg, APP_NAME, MB_ICONERROR | MB_OK);
+}
+
+static int ResolvePath(const wchar_t *name, wchar_t *fullPath, int maxLen)
+{
+    if (wcschr(name, L'\\') || wcschr(name, L'/') || wcsstr(name, L":") != NULL) {
+        wcscpy(fullPath, name);
+        return GetFileAttributesW(fullPath) != INVALID_FILE_ATTRIBUTES;
+    }
+    wchar_t *envPaths = NULL;
+    DWORD envLen = GetEnvironmentVariableW(L"PATH", NULL, 0);
+    if (envLen > 0) {
+        envPaths = (wchar_t*)malloc(envLen * sizeof(wchar_t));
+        if (envPaths) {
+            GetEnvironmentVariableW(L"PATH", envPaths, envLen);
+            wchar_t *ctx = NULL;
+            wchar_t *tok = wcstok_s(envPaths, L";", &ctx);
+            while (tok) {
+                wsprintfW(fullPath, L"%ls\\%ls", tok, name);
+                if (GetFileAttributesW(fullPath) != INVALID_FILE_ATTRIBUTES) {
+                    free(envPaths);
+                    return 1;
+                }
+                tok = wcstok_s(NULL, L";", &ctx);
+            }
+            free(envPaths);
+        }
+    }
+    // Fallback: check System32 directly
+    wchar_t sys32[MAX_PATH];
+    GetSystemDirectoryW(sys32, MAX_PATH);
+    wsprintfW(fullPath, L"%ls\\%ls", sys32, name);
+    if (GetFileAttributesW(fullPath) != INVALID_FILE_ATTRIBUTES) return 1;
+
+    wsprintfW(fullPath, L"%ls\\WindowsPowerShell\\v1.0\\%ls", sys32, name);
+    if (GetFileAttributesW(fullPath) != INVALID_FILE_ATTRIBUTES) return 1;
+
+    wcscpy(fullPath, name);
+    return 0;
+}
+
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow)
 {
+    (void)hInst; (void)hPrev; (void)nShow;
+
     wchar_t lpCmdLine[1024] = L"";
-    MultiByteToWideChar(CP_ACP, 0, lpCmdLineA, -1, lpCmdLine, 1024);
+    MultiByteToWideChar(CP_UTF8, 0, lpCmdLineA, -1, lpCmdLine, 1024);
 
     wchar_t appPath[MAX_PATH] = L"";
     wchar_t args[4096] = L"";
@@ -46,7 +174,13 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
 
     if (wcslen(PROGRAM_PATH) > 0) {
         isProgramMode = 1;
-        wcscpy(appPath, PROGRAM_PATH);
+        // Resolve full path to program
+        wchar_t resolved[MAX_PATH];
+        if (ResolvePath(PROGRAM_PATH, resolved, MAX_PATH)) {
+            wcscpy(appPath, resolved);
+        } else {
+            wcscpy(appPath, PROGRAM_PATH);
+        }
         wcscpy(args, PROGRAM_ARGS);
         wcscpy(workDir, WORK_DIR);
         if (wcslen(lpCmdLine) > 0) {
@@ -68,12 +202,18 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
             _wsplitpath(exePath, drive, dir, name, NULL);
             wsprintfW(scriptPath, L"%ls%ls%ls.ps1", drive, dir, name);
             if (GetFileAttributesW(scriptPath) == INVALID_FILE_ATTRIBUTES) {
-                wsprintfW(msg, L"Script no encontrado.\n\nUsa --script con ruta valida al generar el launcher.\n\nBuscado:\n%ls", SCRIPT_PATH);
+                wsprintfW(msg, L"Script no encontrado.\nRuta buscada:\n%ls", SCRIPT_PATH);
+                LogError(L"SCRIPT_NOT_FOUND", L"", L"", 0);
                 MessageBoxW(NULL, msg, APP_NAME, MB_ICONERROR | MB_OK);
                 return 1;
             }
         }
-        wcscpy(appPath, L"powershell.exe");
+        wchar_t pwshFull[MAX_PATH];
+        if (ResolvePath(L"powershell.exe", pwshFull, MAX_PATH)) {
+            wcscpy(appPath, pwshFull);
+        } else {
+            wcscpy(appPath, L"powershell.exe");
+        }
         wsprintfW(args, L"-ExecutionPolicy Bypass -NoProfile -WindowStyle %ls -File \"%ls\"",
             FLAG_CONSOLE ? L"Normal" : L"Hidden", scriptPath);
         if (wcslen(lpCmdLine) > 0) {
@@ -81,6 +221,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
             wcscat(args, lpCmdLine);
         }
     } else {
+        LogError(L"NO_PROGRAM_OR_SCRIPT", L"", L"", 0);
         MessageBoxW(NULL, L"No se configuro programa ni script.\n\nUsa --program o --script al generar el launcher.",
             APP_NAME, MB_ICONERROR | MB_OK);
         return 1;
@@ -96,8 +237,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
         sei.lpDirectory = wcslen(workDir) > 0 ? workDir : NULL;
         sei.nShow = showCmd;
         if (!ShellExecuteExW(&sei)) {
-            wsprintfW(msg, L"Error al ejecutar como administrador:\n%ls", appPath);
-            MessageBoxW(NULL, msg, APP_NAME, MB_ICONERROR | MB_OK);
+            DWORD err = GetLastError();
+            ShowError(L"Error al ejecutar como administrador", appPath, args, err);
             return 1;
         }
         if (sei.hProcess) {
@@ -120,11 +261,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
 
     DWORD dwFlags = FLAG_CONSOLE ? 0 : CREATE_NO_WINDOW;
 
-    if (!CreateProcessW(NULL, cmdLine, NULL, NULL, FALSE, dwFlags, NULL,
+    if (!CreateProcessW(appPath, cmdLine, NULL, NULL, FALSE, dwFlags, NULL,
         wcslen(workDir) > 0 ? workDir : NULL, &si, &pi))
     {
-        wsprintfW(msg, L"Error al ejecutar:\n%ls\n\nComando:\n%ls", appPath, cmdLine);
-        MessageBoxW(NULL, msg, APP_NAME, MB_ICONERROR | MB_OK);
+        DWORD err = GetLastError();
+        ShowError(L"Error al lanzar el programa", appPath, cmdLine, err);
         return 1;
     }
 
