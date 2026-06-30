@@ -221,8 +221,10 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLineA, int nShow
         if (ResolvePath(L"powershell.exe", pwshFull, MAX_PATH)) {
             wcscpy(appPath, pwshFull);
         }
-        wsprintfW(args, L"-ExecutionPolicy Bypass -NoProfile -WindowStyle %ls -File \"%ls\"",
-            FLAG_CONSOLE ? L"Normal" : L"Hidden", scriptPath);
+        wsprintfW(args, L"-ExecutionPolicy Bypass -NoProfile -WindowStyle %ls%ls -File \"%ls\"",
+            FLAG_CONSOLE ? L"Normal" : L"Hidden",
+            FLAG_CONSOLE ? L" -NoExit" : L"",
+            scriptPath);
         if (wcslen(lpCmdLine) > 0) {
             wcscat(args, L" ");
             wcscat(args, lpCmdLine);

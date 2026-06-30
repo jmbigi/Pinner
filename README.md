@@ -82,6 +82,32 @@ La GUI ofrece:
 
 ---
 
+## PINNER PYTHON WIZARD (GUI Python)
+
+Wizard específico para proyectos Python con entorno virtual:
+
+```cmd
+python pinpywiz.py
+```
+
+O desde su launcher (una vez generado):
+```cmd
+.\exes\Pinner Python Wizard.exe
+```
+
+Campos del wizard:
+- **Carpeta del proyecto** — directorio raíz del proyecto
+- **Carpeta .venv** — carpeta del entorno virtual (autodetecta `Scripts\Activate.ps1`)
+- **Script Python** — archivo `.py` a ejecutar (ruta relativa al proyecto)
+- **Nombre del acceso** — título del launcher
+- **Ícono** — selector de los 66+ iconos incluidos, o personalizado
+- **Consola** — checkbox para mostrar/ocultar ventana de terminal
+
+Flujo: completa los campos → "Generar y compilar" → crea el `.ps1` en `user_scripts\`
+y el `.exe` en `exes\`. Listo para anclar.
+
+---
+
 ## Uso CLI
 
 ### Generar un launcher (modo programa — autónomo)
@@ -205,6 +231,37 @@ Ventajas:
 - `user_scripts\` está en `.gitignore` — no se sube al repo
 - Usá `--console` para ver la terminal
 
+### Proyecto Python con entorno virtual
+
+```cmd
+# 1. Crear el script en user_scripts\
+# user_scripts\run.ps1:
+#   Set-Location "C:\Proyecto"
+#   .\.venv\Scripts\Activate.ps1
+#   python main.py
+
+# 2. Generar el launcher con --console (se agrega -NoExit automáticamente)
+pinmaker -n "Mi App Python" -s "user_scripts\run.ps1" --console -i icons\ico\python.ico
+```
+
+O usar el **Pinner Python Wizard** (GUI) que hace todo automático:
+```cmd
+python pinpywiz.py
+```
+
+### Generar launcher del wizard
+
+Para tener el wizard como un `.exe` anclable:
+```cmd
+# Crear script que ejecuta el wizard
+# user_scripts\pinpy_wizard.ps1:
+#   Set-Location (Split-Path -Parent $PSScriptRoot)
+#   python pinpywiz.py
+
+# Generar launcher
+pinmaker -n "Pinner Python Wizard" -s "user_scripts\pinpy_wizard.ps1" -i icons\ico\python.ico
+```
+
 ### Batch desde JSON (múltiples launchers de una sola vez)
 
 ```cmd
@@ -304,8 +361,11 @@ Pinner\
 ├── convert_custom.ps1          # Convierte iconos SVG personalizados a ICO
 ├── convert_svg_to_ico.ps1      # Convierte SVGs completos a ICOs
 ├── download_icons.ps1          # Descarga iconos desde SimpleIcons
+├── pinpywiz.py                 # Wizard Python GUI (crea launchers para proyectos Python)
 ├── user_scripts\                # Scripts personalizados del usuario (gitignored)
-│   └── _example.ps1             #   Template de ejemplo
+│   ├── _example.ps1             #   Template de ejemplo
+│   ├── run_prototype.ps1        #   Script para Run Prototype
+│   └── pinpy_wizard.ps1         #   Script para lanzar el wizard Python
 ├── pinmaker.exe                # Generador (ya compilado, gitignored)
 ├── PLAN.md                     # Hoja de ruta / mejoras implementadas
 ├── AGENTS.md                   # Instrucciones para el agente de desarrollo

@@ -43,6 +43,21 @@ La máquina se adapta a vos, no vos a la máquina.
 
 ---
 
+### Fase 7 — Pinner Python Wizard (GUI Python) ✅
+- `pinpywiz.py` — wizard gráfico tkinter para proyectos Python
+- Campos: carpeta proyecto, .venv, script Python, nombre, icono, consola
+- Genera `.ps1` en `user_scripts\` + ejecuta pinmaker → `.exe` en `exes\`
+- Selector de 66+ iconos incluidos + opción de icono personalizado
+- Validación de campos antes de generar
+
+### Fase 8 — -NoExit automático en modo consola ✅
+- `launcher_template.c`: con `--console` se agrega `-NoExit` a PowerShell
+- La ventana se queda abierta al terminar el script (útil para ver errores/output)
+- Todos los launchers script se benefician sin modificar cada `.ps1`
+- Sin `--console` el comportamiento es el mismo (oculto, sin -NoExit)
+
+---
+
 ## Orden de implementación
 
 Cada fase: implementar → probar visualmente → commit

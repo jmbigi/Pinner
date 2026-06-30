@@ -13,6 +13,10 @@ output/
 # Scripts personales del usuario (no se suben al repo)
 user_scripts/
 
+# Python
+__pycache__/
+*.pyc
+
 # OS
 Thumbs.db
 .DS_Store
