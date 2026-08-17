@@ -175,17 +175,21 @@ void escape_c_string(const wchar_t *src, wchar_t *dst, int max)
 
 void sanitize_filename(const wchar_t *src, wchar_t *dst, int max)
 {
-    int i, j;
+    int i, j, spc;
     for (i = 0, j = 0; src[i] && j < max - 2; i++) {
         wchar_t c = src[i];
         if (c == L'\\' || c == L'/' || c == L':' || c == L'*' || c == L'?'
-            || c == L'<' || c == L'>' || c == L'|' || c == L'"') {
-            dst[j++] = L' ';
+            || c == L'<' || c == L'>' || c == L'|' || c == L'"' || c == L' ') {
+            /* Los espacios y caracteres ilegales no van en el NOMBRE DE ARCHIVO:
+               se convierten en '_' para que el .exe no tenga espacios. El nombre
+               mostrado (APP_NAME) conserva los espacios originales. */
+            if (j > 0 && dst[j-1] == L'_') continue;
+            dst[j++] = L'_';
         } else if ((unsigned int)c >= 32) {
             dst[j++] = c;
         }
     }
-    while (j > 0 && dst[j-1] == L' ') j--;
+    while (j > 0 && dst[j-1] == L'_') j--;
     dst[j] = 0;
 }
 

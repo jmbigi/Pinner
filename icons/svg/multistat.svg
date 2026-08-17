@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D5E3E"/>
+      <stop offset="100%" stop-color="#1B9C6C"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <g transform="translate(128,128)">
+    <!-- Distribution curves (multi-stat) -->
+    <path d="M-80,40 Q-60,-40 -40,-60 Q-20,-80 0,-60 Q20,-40 40,-30 Q60,-20 80,40" 
+          fill="none" stroke="#A7F3D0" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+    <path d="M-80,40 Q-50,-20 -30,-40 Q-10,-60 10,-45 Q30,-30 50,-15 Q70,0 80,40" 
+          fill="none" stroke="#6EE7B7" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    <path d="M-80,40 Q-40,0 -20,-10 Q0,-20 20,-5 Q40,10 60,20 Q70,30 80,40" 
+          fill="none" stroke="#34D399" stroke-width="4" stroke-linecap="round" opacity="0.5"/>
+    <!-- Legend nodes -->
+    <circle cx="-20" cy="-70" r="5" fill="#A7F3D0"/>
+    <circle cx="10" cy="-55" r="5" fill="#6EE7B7"/>
+    <circle cx="30" cy="-25" r="5" fill="#34D399"/>
+    <!-- Axis -->
+    <line x1="-80" y1="40" x2="80" y2="40" stroke="#FFFFFF" stroke-width="2" opacity="0.4"/>
+  </g>
+</svg>
